@@ -4,6 +4,11 @@ const sellerSchema = new mongoose.Schema({
     phoneNumber: {
         type: Number,
         required: true
+
+    },
+    area: {
+        type: String,
+        required: true
     },
     products: {
         productName: {
