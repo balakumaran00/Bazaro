@@ -4,35 +4,12 @@ import { MapPin, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const chennaAreas = [
-  'T. Nagar',
-  'Anna Nagar',
-  'Velachery',
-  'Adyar',
-  'Mylapore',
-  'Nungambakkam',
-  'Kodambakkam',
-  'Guindy',
-  'Porur',
-  'Tambaram',
-  'Chrompet',
-  'Perungudi',
-  'OMR',
-  'ECR'
-];
-
-const Landing = () => {
-  const [selectedLocation, setSelectedLocation] = useState('');
+const Landing: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleContinue = () => {
-    if (selectedLocation) {
-      // Store location in localStorage for later use
-      localStorage.setItem('bazaro-location', selectedLocation);
-      navigate('/user-type');
-    }
+  const handleContinue = (): void => {
+    navigate('/user-type');
   };
 
   return (
@@ -45,7 +22,7 @@ const Landing = () => {
         </div>
 
         <motion.div 
-          className="text-center z-10 w-full max-w-md"
+          className="text-center z-10 w-full max-w-2xl"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -63,55 +40,37 @@ const Landing = () => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Bazaro
             </h1>
-            <p className="text-lg text-muted-foreground mt-2">
-              Connect. Trade. Prosper.
-            </p>
           </motion.div>
 
-          {/* Location selection */}
+          {/* Welcome message */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
             className="space-y-6"
           >
-            <div className="text-left">
-              <h2 className="text-2xl font-semibold mb-2">Choose your location</h2>
-              <p className="text-muted-foreground">
-                Select your area in Chennai to find nearby sellers
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-4">Welcome to Bazaro!</h2>
+              <h3 className="text-xl font-semibold text-primary mb-4">
+                Connecting Local Street Vendors with You.
+              </h3>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Discover fresh, affordable products from nearby sellers or start selling your goods in just a few clicks.
               </p>
             </div>
 
-            <div className="space-y-4">
-              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                <SelectTrigger className="h-14 glass border-primary/20 hover:border-primary/40">
-                  <div className="flex items-center space-x-3">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    <SelectValue placeholder="Select your area..." />
-                  </div>
-                </SelectTrigger>
-                <SelectContent className="glass border-primary/20">
-                  {chennaAreas.map((area) => (
-                    <SelectItem key={area} value={area} className="hover:bg-primary/10">
-                      {area}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="mt-8"
+            >
+              <Button
+                onClick={handleContinue}
+                className="w-full h-14 text-lg font-semibold btn-gradient"
               >
-                <Button
-                  onClick={handleContinue}
-                  disabled={!selectedLocation}
-                  className="w-full h-14 text-lg font-semibold btn-gradient disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Continue
-                </Button>
-              </motion.div>
-            </div>
+                Get Started
+              </Button>
+            </motion.div>
           </motion.div>
 
           {/* Features preview */}
