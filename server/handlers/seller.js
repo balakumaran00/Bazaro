@@ -1,12 +1,12 @@
 const seller = require("../db/models/seller");
 
 const addSeller = async (req, res) => {
-    const { phoneNumber, productName, productQuantity, productPrice } = req.body;
+    const { area,phoneNumber, productName, productQuantity, productPrice } = req.body;
     try {
         const newSeller = new seller({
+            area,
             phoneNumber,
             products: {
-                phoneNumber,
                 productName,
                 productQuantity,
                 productPrice

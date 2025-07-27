@@ -1,12 +1,11 @@
 const mongoose = require("mongoose");
 
-const sellerSchema = new mongoose.Schema({
+const vendorSchema = new mongoose.Schema({
     phoneNumber: {
         type: Number,
         required: true
-
     },
-    area: {
+    vendorName: {
         type: String,
         required: true
     },
@@ -17,13 +16,15 @@ const sellerSchema = new mongoose.Schema({
         },
         productQuantity: {
             type: Number,
-            
         },
         productPrice: {
             type: Number,
-        
         }
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
 });
 
-module.exports = mongoose.model("Seller", sellerSchema);
+module.exports = mongoose.model("Vendor", vendorSchema); 

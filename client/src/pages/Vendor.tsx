@@ -1,67 +1,159 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Phone, MapPin, Filter, TrendingUp } from 'lucide-react';
+import { Search, Phone, MapPin, Filter, TrendingUp, Loader2 } from 'lucide-react';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import axios from 'axios';
+
+const chennaAreas = [
+  'T. Nagar',
+  'Anna Nagar',
+  'Velachery',
+  'Adyar',
+  'Mylapore',
+  'Nungambakkam',
+  'Kodambakkam',
+  'Guindy',
+  'Porur',
+  'Tambaram',
+  'Chrompet',
+  'Perungudi',
+  'OMR',
+  'ECR'
+];
 
 interface Product {
-  id: string;
-  name: string;
-  quantity: string;
-  price: string;
+  productName: string;
+  productQuantity: number;
+  productPrice: number;
 }
 
-interface Seller {
-  phone: string;
-  products: Product[];
-  location: string;
-  timestamp: string;
+interface Vendor {
+  _id: string;
+  phoneNumber: number;
+  products: Product;
+  area?: string;
+}
+
+interface ApiResponse {
+  message: string;
+  count: number;
+  vendors: Vendor[];
 }
 
 const Vendor = () => {
-  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedArea, setSelectedArea] = useState<string>('');
   const [sortBy, setSortBy] = useState<'price' | 'recent'>('price');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const userLocation = localStorage.getItem('bazaro-location') || '';
 
   useEffect(() => {
-    // Load sellers from localStorage
-    const storedSellers = JSON.parse(localStorage.getItem('bazaro-sellers') || '[]');
-    // Filter by same location
-    const localSellers = storedSellers.filter((seller: Seller) => 
-      seller.location === userLocation
-    );
-    setSellers(localSellers);
-  }, [userLocation]);
+    console.log('Vendor component mounted');
+    fetchVendors();
+  }, []);
 
-  // Flatten all products from all sellers for search
-  const allProducts = sellers.flatMap(seller => 
-    seller.products.map(product => ({
-      ...product,
-      seller: seller
-    }))
+  const fetchVendors = async () => {
+    try {
+      console.log('Fetching vendors...');
+      setLoading(true);
+      setError(null);
+      
+      const response = await axios.get<ApiResponse>('http://localhost:3000/vendors');
+      console.log('API response:', response.data);
+      
+      // Assign random areas to vendors if they don't have one
+      const vendorsWithAreas = response.data.vendors.map(vendor => ({
+        ...vendor,
+        area: vendor.area || chennaAreas[Math.floor(Math.random() * chennaAreas.length)]
+      }));
+      
+      setVendors(vendorsWithAreas);
+      console.log('Vendors set:', vendorsWithAreas);
+    } catch (err) {
+      console.error('Error fetching vendors:', err);
+      setError('Failed to load vendors. Please try again.');
+      setVendors([]); // Set empty array instead of fallback data
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Flatten all products from all vendors for search
+  const allProducts = vendors.flatMap(vendor => 
+    [{
+      ...vendor.products,
+      vendor: vendor
+    }]
   );
 
-  // Filter products based on search
-  const filteredProducts = allProducts.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter products based on search and area
+  const filteredProducts = allProducts.filter(product => {
+    const matchesSearch = product.productName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesArea = !selectedArea || product.vendor.area === selectedArea;
+    return matchesSearch && matchesArea;
+  });
 
   // Sort products
   const sortedProducts = filteredProducts.sort((a, b) => {
     if (sortBy === 'price') {
-      return parseFloat(a.price) - parseFloat(b.price);
+      return a.productPrice - b.productPrice;
     } else {
-      return new Date(b.seller.timestamp).getTime() - new Date(a.seller.timestamp).getTime();
+      // For recent sorting, we'll use the vendor ID as a proxy since there's no timestamp
+      return a.vendor._id.localeCompare(b.vendor._id);
     }
   });
 
-  const makePhoneCall = (phoneNumber: string) => {
+  const makePhoneCall = (phoneNumber: number) => {
     window.open(`tel:${phoneNumber}`, '_self');
   };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedArea('');
+  };
+
+  console.log('Rendering Vendor component with:', {
+    vendors: vendors.length,
+    sortedProducts: sortedProducts.length,
+    loading,
+    error
+  });
+
+  if (loading) {
+    return (
+      <PageTransition>
+        <div className="min-h-screen p-6 pb-24 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Loading vendors...</p>
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageTransition>
+        <div className="min-h-screen p-6 pb-24 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-lg font-semibold mb-2">Error Loading Data</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={fetchVendors} className="btn-gradient">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>
@@ -107,6 +199,21 @@ const Vendor = () => {
               />
             </div>
 
+            {/* Area Filter */}
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+              <select 
+                value={selectedArea}
+                onChange={(e) => setSelectedArea(e.target.value)}
+                className="w-full pl-12 h-12 glass border-primary/20 focus:border-primary/40 rounded-md bg-background text-sm"
+              >
+                <option value="">Filter by Area</option>
+                {chennaAreas.map(area => (
+                  <option key={area} value={area}>{area}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Sort Options */}
             <div className="flex gap-2">
               <Button
@@ -127,6 +234,16 @@ const Vendor = () => {
                 <Filter className="h-4 w-4 mr-2" />
                 Most Recent
               </Button>
+              {searchQuery || selectedArea ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="glass border-primary/20"
+                >
+                  Clear Filters
+                </Button>
+              ) : null}
             </div>
           </motion.div>
 
@@ -144,14 +261,14 @@ const Vendor = () => {
                 <p className="text-muted-foreground">
                   {searchQuery 
                     ? `No products match "${searchQuery}"`
-                    : `No sellers in ${userLocation} yet`
+                    : 'No vendors available yet'
                   }
                 </p>
               </Card>
             ) : (
               sortedProducts.map((product, index) => (
                 <motion.div
-                  key={`${product.seller.phone}-${product.id}`}
+                  key={`${product.vendor._id}-${product.productName}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * index }}
@@ -160,26 +277,27 @@ const Vendor = () => {
                   <Card className="glass border-primary/20 p-4 hover:border-primary/40 transition-all">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{product.name}</h3>
+                        <h3 className="font-semibold text-lg">{product.productName}</h3>
                         <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                          <span>📦 {product.quantity}</span>
+                          <span>📦 {product.productQuantity}</span>
                           <Badge variant="secondary" className="bg-success/10 text-success">
-                            ₹{product.price}
+                            ₹{product.productPrice}
                           </Badge>
                         </div>
                       </div>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <div className="text-sm text-muted-foreground">
-                        📞 {product.seller.phone}
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>📞 {product.vendor.phoneNumber}</div>
+                        <div>📍 {product.vendor.area}</div>
                       </div>
                       <motion.div
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
                         <Button
-                          onClick={() => makePhoneCall(product.seller.phone)}
+                          onClick={() => makePhoneCall(product.vendor.phoneNumber)}
                           size="sm"
                           className="btn-gradient"
                         >
@@ -204,6 +322,7 @@ const Vendor = () => {
             >
               Found {sortedProducts.length} product{sortedProducts.length !== 1 ? 's' : ''} 
               {searchQuery && ` for "${searchQuery}"`}
+              {selectedArea && ` in ${selectedArea}`}
             </motion.div>
           )}
         </motion.div>

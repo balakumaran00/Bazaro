@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Phone, Package, DollarSign, Plus, Trash2, Check } from 'lucide-react';
+import { Phone, Package, DollarSign, Plus, Trash2, Check, MapPin, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Button } from '@/components/ui/button';
@@ -16,10 +16,29 @@ interface Product {
   price: string;
 }
 
+const chennaAreas = [
+  'T. Nagar',
+  'Anna Nagar',
+  'Velachery',
+  'Adyar',
+  'Mylapore',
+  'Nungambakkam',
+  'Kodambakkam',
+  'Guindy',
+  'Porur',
+  'Tambaram',
+  'Chrompet',
+  'Perungudi',
+  'OMR',
+  'ECR'
+];
+
 const Seller = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [area, setArea] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([
     { id: '1', name: '', quantity: '', price: '' }
   ]);
@@ -47,8 +66,14 @@ const Seller = () => {
     ));
   };
 
+  const handleAreaSelect = (selectedArea: string) => {
+    setArea(selectedArea);
+    setIsDropdownOpen(false);
+  };
+
   const isFormValid = () => {
     return phoneNumber.length >= 10 && 
+           area.trim() !== '' &&
            products.every(p => p.name && p.quantity && p.price);
   };
 
@@ -60,6 +85,7 @@ const Seller = () => {
       await Promise.all(products.map(async (p) => {
         const payload = {
           phoneNumber: phoneNumber,
+          area: area,
           productName: p.name,
           productQuantity: p.quantity,
           productPrice: p.price
@@ -127,6 +153,51 @@ const Seller = () => {
                 className="pl-12 h-12 glass border-primary/20 focus:border-primary/40"
                 maxLength={10}
               />
+            </div>
+          </motion.div>
+
+          {/* Area Dropdown */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.35 }}
+            className="mb-6"
+          >
+            <label className="block text-sm font-medium mb-2">
+              📍 Your Area
+            </label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground z-10" />
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full h-12 pl-12 pr-12 text-left glass border border-primary/20 hover:border-primary/40 focus:border-primary/40 rounded-lg bg-background flex items-center justify-between transition-colors"
+              >
+                <span className={area ? 'text-foreground' : 'text-muted-foreground'}>
+                  {area || 'Select your area'}
+                </span>
+                <ChevronDown className={'h-5 w-5 text-muted-foreground transition-transform ' + (isDropdownOpen ? 'rotate-180' : '')} />
+              </button>
+              
+              {isDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 mt-1 glass border border-primary/20 rounded-lg bg-background shadow-lg z-20 max-h-48 overflow-y-auto"
+                >
+                  {chennaAreas.map((areaOption, index) => (
+                    <button
+                      key={areaOption}
+                      type="button"
+                      onClick={() => handleAreaSelect(areaOption)}
+                      className="w-full px-4 py-3 text-left hover:bg-primary/10 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                    >
+                      {areaOption}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
             </div>
           </motion.div>
 
@@ -240,4 +311,4 @@ const Seller = () => {
   );
 };
 
-export default Seller;
+export default Seller;

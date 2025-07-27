@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, MapPin, Phone, Package, Edit, LogOut, ArrowLeft } from 'lucide-react';
+import { User, MapPin, Phone, Package, Edit, LogOut, ArrowLeft, Save, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import decepticonsLogo from '@/assets/decepticons-logo.png';
+// Remove this import since we're using inline SVG now
+// import decepticonsLogo from '@/assets/decepticons-logo.png';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 interface UserData {
   userType: 'seller' | 'vendor' | null;
   location: string;
   phone?: string;
   productsCount?: number;
+  name?: string;
 }
 
 const Profile = () => {
@@ -21,12 +24,19 @@ const Profile = () => {
     userType: null,
     location: '',
     phone: '',
-    productsCount: 0
+    productsCount: 0,
+    name: ''
   });
+  
+  const [nameInput, setNameInput] = useState('');
+  const [isNameSaved, setIsNameSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showNameInput, setShowNameInput] = useState(false);
 
   useEffect(() => {
     // Load user data from localStorage
     const location = localStorage.getItem('bazaro-location') || '';
+    const name = localStorage.getItem('bazaro-user-name') || '';
     const sellers = JSON.parse(localStorage.getItem('bazaro-sellers') || '[]');
     
     // Check if user is a seller (has listed products)
@@ -37,16 +47,22 @@ const Profile = () => {
         userType: 'seller',
         location,
         phone: userSeller.phone,
-        productsCount: userSeller.products.length
+        productsCount: userSeller.products.length,
+        name
       });
     } else {
       setUserData({
         userType: 'vendor',
         location,
         phone: '',
-        productsCount: 0
+        productsCount: 0,
+        name
       });
     }
+    
+    setNameInput(name);
+    // Show input only if no name is saved
+    setShowNameInput(!name);
   }, []);
 
   const handleEditProfile = () => {
@@ -54,9 +70,40 @@ const Profile = () => {
     navigate('/user-type');
   };
 
+  const handleSaveName = async () => {
+    if (!nameInput.trim()) return;
+    
+    setIsSaving(true);
+    
+    // Simulate save delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Save name to localStorage
+    localStorage.setItem('bazaro-user-name', nameInput.trim());
+    
+    // Update userData state
+    setUserData(prev => ({ ...prev, name: nameInput.trim() }));
+    
+    // Show success state
+    setIsNameSaved(true);
+    setIsSaving(false);
+    
+    // Hide success state and input box after 2 seconds
+    setTimeout(() => {
+      setIsNameSaved(false);
+      setShowNameInput(false);
+    }, 2000);
+  };
+
+  const handleEditName = () => {
+    setShowNameInput(true);
+    setIsNameSaved(false);
+  };
+
   const handleClearData = () => {
     localStorage.removeItem('bazaro-location');
     localStorage.removeItem('bazaro-sellers');
+    localStorage.removeItem('bazaro-user-name');
     navigate('/');
   };
 
@@ -110,17 +157,136 @@ const Profile = () => {
               transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
               className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center p-4"
             >
-              <img 
-                src={decepticonsLogo} 
-                alt="Decepticons Logo" 
+              {/* REPLACED: Image with inline SVG */}
+              <svg 
+                xmlns="http://www.w3.org/2000/svg"
                 className="w-full h-full object-contain"
-              />
+                viewBox="0 0 200 200"
+                aria-label="Decepticons Logo"
+              >
+                <g fill="purple" stroke="darkpurple" strokeWidth="2">
+                  <path d="M100 20 L170 80 L160 100 L140 90 L120 110 L100 100 L80 110 L60 90 L40 100 L30 80 Z" />
+                  <path d="M100 40 L150 80 L130 85 L100 70 L70 85 L50 80 Z" />
+                  <circle cx="100" cy="75" r="8" fill="white" />
+                  <path d="M30 80 L20 70 L35 75 Z" />
+                  <path d="M170 80 L180 70 L165 75 Z" />
+                </g>
+              </svg>
             </motion.div>
-            <h1 className="text-2xl font-bold">Your Profile</h1>
+            <h1 className="text-2xl font-bold">
+              {userData.name ? `Hello, ${userData.name}!` : 'Your Profile'}
+            </h1>
             <p className="text-muted-foreground mt-2">
               Manage your Bazaro account
             </p>
           </div>
+
+          {/* Rest of your component remains the same... */}
+          {/* Name Section - Input or Display */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mb-6"
+          >
+            <Card className="glass border-primary/20 p-4">
+              {showNameInput ? (
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <User className="h-5 w-5 text-primary" />
+                    <label className="text-sm font-medium">Your Name</label>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Input
+                      type="text"
+                      placeholder="Enter your name"
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      className="flex-1 glass border-primary/20 focus:border-primary/40"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSaveName();
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button
+                        onClick={handleSaveName}
+                        disabled={!nameInput.trim() || isSaving}
+                        size="sm"
+                        className={`min-w-[80px] transition-all duration-300 ${
+                          isNameSaved 
+                            ? 'bg-success hover:bg-success text-white' 
+                            : 'btn-gradient'
+                        }`}
+                      >
+                        {isSaving ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                          />
+                        ) : isNameSaved ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-1" />
+                            Save
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
+                  </div>
+                  {isNameSaved && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm text-success flex items-center"
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Name saved successfully!
+                    </motion.p>
+                  )}
+                </div>
+              ) : userData.name ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <User className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">Name</h3>
+                      <p className="text-lg font-semibold text-primary">
+                        {userData.name}
+                      </p>
+                    </div>
+                  </div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={handleEditName}
+                      variant="outline"
+                      size="sm"
+                      className="glass border-primary/20 hover:border-primary/40"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </motion.div>
+                </motion.div>
+              ) : null}
+            </Card>
+          </motion.div>
 
           {/* User Type Badge */}
           <motion.div
