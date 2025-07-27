@@ -90,7 +90,7 @@ const Seller = () => {
           productQuantity: p.quantity,
           productPrice: p.price
         };
-        await axios.post('http://localhost:3000/seller', payload);
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/seller`, payload);
       }));
       toast({
         title: "Success! 🎉",

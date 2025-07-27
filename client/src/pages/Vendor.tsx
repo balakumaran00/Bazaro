@@ -64,7 +64,7 @@ const Vendor = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get<ApiResponse>('http://localhost:3000/vendors');
+      const response = await axios.get<ApiResponse>(`${import.meta.env.VITE_API_BASE_URL}/vendors`);
       console.log('API response:', response.data);
       
       // Assign random areas to vendors if they don't have one
