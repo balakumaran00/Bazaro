@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
 import axios from 'axios';
 
 const chennaAreas = [
@@ -36,7 +35,7 @@ interface Vendor {
   _id: string;
   phoneNumber: number;
   products: Product;
-  area?: string; // Adding area field to vendor interface
+  area?: string;
 }
 
 interface ApiResponse {
@@ -44,40 +43,6 @@ interface ApiResponse {
   count: number;
   vendors: Vendor[];
 }
-
-// Fallback data for testing
-const fallbackVendors: Vendor[] = [
-  {
-    _id: '1',
-    phoneNumber: 9876543210,
-    products: {
-      productName: 'Fresh Tomatoes',
-      productQuantity: 50,
-      productPrice: 40
-    },
-    area: 'T. Nagar'
-  },
-  {
-    _id: '2',
-    phoneNumber: 9876543211,
-    products: {
-      productName: 'Onions',
-      productQuantity: 100,
-      productPrice: 30
-    },
-    area: 'Anna Nagar'
-  },
-  {
-    _id: '3',
-    phoneNumber: 9876543212,
-    products: {
-      productName: 'Potatoes',
-      productQuantity: 75,
-      productPrice: 25
-    },
-    area: 'Mylapore'
-  }
-];
 
 const Vendor = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -102,19 +67,18 @@ const Vendor = () => {
       const response = await axios.get<ApiResponse>('http://localhost:3000/vendors');
       console.log('API response:', response.data);
       
-      // Add random area to vendors for demonstration
+      // Assign random areas to vendors if they don't have one
       const vendorsWithAreas = response.data.vendors.map(vendor => ({
         ...vendor,
-        area: chennaAreas[Math.floor(Math.random() * chennaAreas.length)]
+        area: vendor.area || chennaAreas[Math.floor(Math.random() * chennaAreas.length)]
       }));
       
       setVendors(vendorsWithAreas);
       console.log('Vendors set:', vendorsWithAreas);
     } catch (err) {
       console.error('Error fetching vendors:', err);
-      setError('Failed to load vendors. Using demo data instead.');
-      // Use fallback data instead of showing error
-      setVendors(fallbackVendors);
+      setError('Failed to load vendors. Please try again.');
+      setVendors([]); // Set empty array instead of fallback data
     } finally {
       setLoading(false);
     }

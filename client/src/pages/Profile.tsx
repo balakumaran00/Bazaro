@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, MapPin, Phone, Package, Edit, LogOut, ArrowLeft, Save, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import decepticonsLogo from '@/assets/decepticons-logo.png';
+// Remove this import since we're using inline SVG now
+// import decepticonsLogo from '@/assets/decepticons-logo.png';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -156,11 +157,21 @@ const Profile = () => {
               transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
               className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center p-4"
             >
-              <img 
-                src={decepticonsLogo} 
-                alt="Decepticons Logo" 
+              {/* REPLACED: Image with inline SVG */}
+              <svg 
+                xmlns="http://www.w3.org/2000/svg"
                 className="w-full h-full object-contain"
-              />
+                viewBox="0 0 200 200"
+                aria-label="Decepticons Logo"
+              >
+                <g fill="purple" stroke="darkpurple" strokeWidth="2">
+                  <path d="M100 20 L170 80 L160 100 L140 90 L120 110 L100 100 L80 110 L60 90 L40 100 L30 80 Z" />
+                  <path d="M100 40 L150 80 L130 85 L100 70 L70 85 L50 80 Z" />
+                  <circle cx="100" cy="75" r="8" fill="white" />
+                  <path d="M30 80 L20 70 L35 75 Z" />
+                  <path d="M170 80 L180 70 L165 75 Z" />
+                </g>
+              </svg>
             </motion.div>
             <h1 className="text-2xl font-bold">
               {userData.name ? `Hello, ${userData.name}!` : 'Your Profile'}
@@ -170,6 +181,7 @@ const Profile = () => {
             </p>
           </div>
 
+          {/* Rest of your component remains the same... */}
           {/* Name Section - Input or Display */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

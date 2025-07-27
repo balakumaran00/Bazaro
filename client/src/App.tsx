@@ -19,7 +19,8 @@ const queryClient = new QueryClient();
 
 const AppRoutes = () => {
   const location = useLocation();
-  const showNavigation = !['/user-type', '/seller', '/vendor'].includes(location.pathname);
+  // Show Navigation only on /seller (not on home or other pages)
+  const showNavigation = location.pathname === '/seller';
 
   return (
     <>

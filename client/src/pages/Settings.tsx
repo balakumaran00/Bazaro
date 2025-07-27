@@ -229,7 +229,7 @@ const Settings: React.FC = () => {
 
                         <div className="pt-2">
                           <p className="text-muted-foreground text-xs">
-                            📧 For privacy concerns, contact: <span className="text-primary">privacy@bazaro.in</span>
+                            📧 For privacy concerns, contact: <span className="text-primary">bazaro104041@gmail.com</span>
                           </p>
                         </div>
                       </div>
@@ -297,7 +297,7 @@ const Settings: React.FC = () => {
 
                         <div className="pt-2">
                           <p className="text-muted-foreground text-xs">
-                            📧 For legal concerns or clarifications, contact: <span className="text-primary">legal@bazaro.in</span>
+                            📧 For legal concerns or clarifications, contact: <span className="text-primary">bazaro104041@gmail.com</span>
                           </p>
                         </div>
                       </div>
@@ -333,6 +333,7 @@ const Settings: React.FC = () => {
               <div className="text-xs text-muted-foreground space-y-1">
                 <div>Version 1.0.0</div>
                 <div>Built with ❤️ for local commerce</div>
+                <div>lots of love  from creaters!</div>
               </div>
             </Card>
           </motion.div>
