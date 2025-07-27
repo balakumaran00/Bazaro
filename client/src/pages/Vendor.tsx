@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+
 import axios from 'axios';
 
 const chennaAreas = [
@@ -35,6 +36,7 @@ interface Vendor {
   _id: string;
   phoneNumber: number;
   products: Product;
+  area?: string; // Adding area field to vendor interface
 }
 
 interface ApiResponse {
@@ -43,27 +45,76 @@ interface ApiResponse {
   vendors: Vendor[];
 }
 
+// Fallback data for testing
+const fallbackVendors: Vendor[] = [
+  {
+    _id: '1',
+    phoneNumber: 9876543210,
+    products: {
+      productName: 'Fresh Tomatoes',
+      productQuantity: 50,
+      productPrice: 40
+    },
+    area: 'T. Nagar'
+  },
+  {
+    _id: '2',
+    phoneNumber: 9876543211,
+    products: {
+      productName: 'Onions',
+      productQuantity: 100,
+      productPrice: 30
+    },
+    area: 'Anna Nagar'
+  },
+  {
+    _id: '3',
+    phoneNumber: 9876543212,
+    products: {
+      productName: 'Potatoes',
+      productQuantity: 75,
+      productPrice: 25
+    },
+    area: 'Mylapore'
+  }
+];
+
 const Vendor = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedArea, setSelectedArea] = useState<string>('');
   const [sortBy, setSortBy] = useState<'price' | 'recent'>('price');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const userLocation = localStorage.getItem('bazaro-location') || '';
 
   useEffect(() => {
+    console.log('Vendor component mounted');
     fetchVendors();
   }, []);
 
   const fetchVendors = async () => {
     try {
+      console.log('Fetching vendors...');
       setLoading(true);
       setError(null);
+      
       const response = await axios.get<ApiResponse>('http://localhost:3000/vendors');
-      setVendors(response.data.vendors);
+      console.log('API response:', response.data);
+      
+      // Add random area to vendors for demonstration
+      const vendorsWithAreas = response.data.vendors.map(vendor => ({
+        ...vendor,
+        area: chennaAreas[Math.floor(Math.random() * chennaAreas.length)]
+      }));
+      
+      setVendors(vendorsWithAreas);
+      console.log('Vendors set:', vendorsWithAreas);
     } catch (err) {
       console.error('Error fetching vendors:', err);
-      setError('Failed to load vendors. Please try again later.');
+      setError('Failed to load vendors. Using demo data instead.');
+      // Use fallback data instead of showing error
+      setVendors(fallbackVendors);
     } finally {
       setLoading(false);
     }
@@ -77,10 +128,12 @@ const Vendor = () => {
     }]
   );
 
-  // Filter products based on search
-  const filteredProducts = allProducts.filter(product =>
-    product.productName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter products based on search and area
+  const filteredProducts = allProducts.filter(product => {
+    const matchesSearch = product.productName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesArea = !selectedArea || product.vendor.area === selectedArea;
+    return matchesSearch && matchesArea;
+  });
 
   // Sort products
   const sortedProducts = filteredProducts.sort((a, b) => {
@@ -95,6 +148,18 @@ const Vendor = () => {
   const makePhoneCall = (phoneNumber: number) => {
     window.open(`tel:${phoneNumber}`, '_self');
   };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedArea('');
+  };
+
+  console.log('Rendering Vendor component with:', {
+    vendors: vendors.length,
+    sortedProducts: sortedProducts.length,
+    loading,
+    error
+  });
 
   if (loading) {
     return (
@@ -170,6 +235,21 @@ const Vendor = () => {
               />
             </div>
 
+            {/* Area Filter */}
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+              <select 
+                value={selectedArea}
+                onChange={(e) => setSelectedArea(e.target.value)}
+                className="w-full pl-12 h-12 glass border-primary/20 focus:border-primary/40 rounded-md bg-background text-sm"
+              >
+                <option value="">Filter by Area</option>
+                {chennaAreas.map(area => (
+                  <option key={area} value={area}>{area}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Sort Options */}
             <div className="flex gap-2">
               <Button
@@ -190,6 +270,16 @@ const Vendor = () => {
                 <Filter className="h-4 w-4 mr-2" />
                 Most Recent
               </Button>
+              {searchQuery || selectedArea ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="glass border-primary/20"
+                >
+                  Clear Filters
+                </Button>
+              ) : null}
             </div>
           </motion.div>
 
@@ -234,8 +324,9 @@ const Vendor = () => {
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <div className="text-sm text-muted-foreground">
-                        📞 {product.vendor.phoneNumber}
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>📞 {product.vendor.phoneNumber}</div>
+                        <div>📍 {product.vendor.area}</div>
                       </div>
                       <motion.div
                         whileHover={{ scale: 1.05 }}
@@ -267,6 +358,7 @@ const Vendor = () => {
             >
               Found {sortedProducts.length} product{sortedProducts.length !== 1 ? 's' : ''} 
               {searchQuery && ` for "${searchQuery}"`}
+              {selectedArea && ` in ${selectedArea}`}
             </motion.div>
           )}
         </motion.div>
